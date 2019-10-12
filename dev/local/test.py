@@ -5,7 +5,6 @@ __all__ = ['test_fail', 'test', 'nequals', 'test_eq', 'test_eq_type', 'test_ne',
 
 #Cell
 from .imports import *
-from .notebook.showdoc import show_doc
 
 #Cell
 def test_fail(f, msg='', contains=''):
@@ -65,9 +64,9 @@ def test_is(a,b):
 
 #Cell
 def test_shuffled(a,b):
-    "`test` that `a` and `b` are shuffled versions of the same set of items"
+    "`test` that `a` and `b` are shuffled versions of the same sequence of items"
     test_ne(a, b)
-    test_eq(set(a), set(b))
+    test_eq(Counter(a), Counter(b))
 
 #Cell
 def test_stdout(f, exp, regex=False):
@@ -82,4 +81,5 @@ TEST_IMAGE = 'images/puppy.jpg'
 
 #Cell
 def test_fig_exists(ax):
+    "Test there is a figure displayed in `ax`"
     assert ax and len(np.frombuffer(ax.figure.canvas.tostring_argb(), dtype=np.uint8))

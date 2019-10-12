@@ -1,14 +1,16 @@
 import io,operator,sys,os,re,os,mimetypes,csv,itertools,json,shutil,glob,pickle,tarfile,collections
 import hashlib,itertools,types,random,inspect,functools,random,time,math,bz2,types,typing,numbers,string
-import multiprocessing,threading,urllib,ipykernel
+import multiprocessing,threading,urllib,ipykernel,tempfile,concurrent.futures,matplotlib, warnings
 
+from concurrent.futures import as_completed
 from functools import partial,reduce
 from itertools import starmap,dropwhile,takewhile,zip_longest
 from copy import copy,deepcopy
 from multiprocessing import Lock,Process,Queue,queues
 from datetime import datetime
 from contextlib import redirect_stdout,contextmanager
-from typing import Iterable,Iterator,Generator,Callable,Sequence,List,Tuple,Union,Optional
+from collections.abc import Iterable,Iterator,Generator,Sequence
+from typing import Union,Optional
 from types import SimpleNamespace
 from pathlib import Path
 from collections import OrderedDict,defaultdict,Counter,namedtuple
@@ -16,14 +18,10 @@ from enum import Enum,IntEnum
 from warnings import warn
 from textwrap import TextWrapper
 from operator import itemgetter,attrgetter,methodcaller
-from notebook import notebookapp
 from urllib.request import urlopen
 
 # External modules
-import matplotlib.pyplot as plt,numpy as np,pandas as pd,scipy
-import requests,yaml
-from typeguard import typechecked
-from fastprogress import progress_bar,master_bar
+import requests,yaml,matplotlib.pyplot as plt,numpy as np,pandas as pd,scipy
 from pandas.api.types import is_categorical_dtype,is_numeric_dtype
 
 from numpy import array,ndarray
@@ -64,14 +62,16 @@ def noops(self, x=None, *args, **kwargs):
     "Do nothing (method)"
     return x
 
+def one_is_instance(a, b, t): return isinstance(a,t) or isinstance(b,t)
+
 def equals(a,b):
     "Compares `a` and `b` for equality; supports sublists, tensors and arrays too"
-    if isinstance(a,type): return a==b
+    if one_is_instance(a,b,type): return a==b
     if hasattr(a, '__array_eq__'): return a.__array_eq__(b)
-    cmp = (np.array_equal if isinstance(a, ndarray   ) else
-           operator.eq    if isinstance(a, (str,dict,set)) else
-           all_equal      if is_iter(a) else
-           operator.eq    if a.__eq__ != object.__eq__ else
+    if hasattr(b, '__array_eq__'): return b.__array_eq__(a)
+    cmp = (np.array_equal if one_is_instance(a, b, ndarray       ) else
+           operator.eq    if one_is_instance(a, b, (str,dict,set)) else
+           all_equal      if is_iter(a) or is_iter(b) else
            operator.eq)
     return cmp(a,b)
 
